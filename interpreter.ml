@@ -57,31 +57,60 @@ let rec parse_expr (input : char list) : (expr * char list) option =
     erreur est retournée s’il n’y a pas de telle expression au début de [input]
     ou si elle est mal formée. *)
 and parse_let (input : char list) : (expr * char list) option =
-  (* À COMPLÉTER! *)
-  None
+    match input with 
+     | '(' :: 'l' :: 'e' :: 't' :: ' ' :: rest -> 
+             match rest with 
+             | '(' :: rest2 -> 
+                     match parse_ident rest2 with 
+                | Some(name, ' ' ::rest3) -> 
+                        match parse_expr rest3 with  
+                     |Some(expr1, ')' :: ' ' :: rest4) ->
+                             match parse_expr rest4 with  
+                        |Some(expr2, rest5) -> Some(Let(name, expr1, expr2), rest5)
+                        |_ -> None
+                     |_ -> None
+                |_ ->None
+             | _ -> None
+    | _ -> None
+
 
 (** [parse_fun input] analyse l’entrée [input] pour y trouver un préfixe
     correspondant à une expression de la forme '(fun name body)'. Une erreur
     est retournée s’il n’y a pas de telle expression au début de [input] ou
     si elle est mal formée. *)
 and parse_fun (input : char list) : (expr * char list) option =
-  (* À COMPLÉTER! *)
-  None
-
+    match input with 
+     |'(' :: 'f' :: 'u' :: 'n' :: ' ' :: rest ->
+        match parse_ident rest with 
+         | Some(value, ' ' :: rest2) -> 
+             match parse_expr rest2 with 
+              | Some(expr, rest3) -> Some(Fun(value, expr), rest3)
+              |_ -> None
+         |_ -> None
+    |_ -> None
+        
 (** [parse_apply input] analyse l’entrée [input] pour y trouver un préfixe
     correspondant à une expression de la forme '(func arg)'. Une erreur est
     retournée s’il n’y a pas de telle expression au début de [input] ou si elle
     est mal formée. *)
 and parse_apply (input : char list) : (expr * char list) option =
-  (* À COMPLÉTER! *)
-  None
-
+   match input with
+   |'a' :: 'p' :: 'p' :: 'l' :: 'y':: '(' :: ' ' :: rest ->
+     match parse_expr rest with
+         |Some(expr1, ' ' :: rest2) ->
+             match parse_expr rest2 with
+                 |Some (expr2, rest3)-> Some(Apply(expr1, expr2), rest3)
+                 |_ -> None
+         |_ -> None
+    |_ -> None 
+ 
 (** [parse_var input] analyse l’entrée [input] pour y trouver un préfixe
     correspondant à une variable libre. Une erreur est retournée s’il n’y a pas
     de telle valeur au début de [input]. *)
 and parse_var (input : char list) : (expr * char list) option =
-  (* À COMPLÉTER! *)
-  None
+    match parse_ident input with
+     |Some(str, rest) -> Some(Var(str), rest)
+     |None -> None
 
 (** [parse_ident input] analyse l’entrée [input] pour y trouver un préfixe
     correspondant à un nom non-vide. Une erreur est retournée s’il n’y a pas de
@@ -91,10 +120,13 @@ and parse_ident (input : char list) : (string * char list) option =
     ('a' <= x && x <= 'z')
     || ('A' <= x && x <= 'Z')
     || ('0' <= x && x <= '9')
-    || x == '-'
-  in
-  (* À COMPLÉTER! *)
-  None
+    || x = '-'
+  in match input with
+  | letter :: rest when is_letter letter ->
+      (match parse_ident rest with
+       | Some(s, rest2) -> Some (string_of_char letter ^ s, rest2)  
+       | None -> Some (string_of_char letter, rest))
+  | _ -> None
 
 (*------------*)
 (* ÉVALUATION *)
