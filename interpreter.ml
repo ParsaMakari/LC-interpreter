@@ -143,14 +143,18 @@ let rec remove (values : 'a list) (x : 'a) : 'a list =
 (** [free_vars expr] donne la liste des noms des variables libres dans
     l’expression [expr]. *)
 let rec free_vars (expr : expr) : string list =
-  (* À COMPLÉTER! *)
-  []
-
+    match expr with
+    |Var(str) -> [str]
+    |Let(name,expr1,expr2) -> (free_vars expr1) @ (remove (free_vars expr2) name) 
+    |Fun(str, expr1) -> remove (free_vars expr1) (str)
+    |Apply(expr1, expr2) -> (free_vars expr1) @ (free_vars expr2)
 (** [fresh name values] donne une variation du nom [name] qui n’apparaît pas
     dans la liste [values]. *)
 let fresh (name : string) (values : string list) : string =
-  (* À COMPLÉTER! *)
-  name
+    match values with
+    |[] -> name
+    |head :: rest -> if head = name then fresh (name ^"0") rest
+        else fresh name rest
 
 (** [substitute expr x y] applique les règles de substitution dans l’expression
     [expr] pour remplacer chaque occurrence de la variable nommée [x] par
