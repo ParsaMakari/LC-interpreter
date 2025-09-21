@@ -150,7 +150,7 @@ let rec free_vars (expr : expr) : string list =
     |Apply(expr1, expr2) -> (free_vars expr1) @ (free_vars expr2)
 (** [fresh name values] donne une variation du nom [name] qui n’apparaît pas
     dans la liste [values]. *)
-let fresh (name : string) (values : string list) : string =
+let rec fresh (name : string) (values : string list) : string =
     match values with
     |[] -> name
     |head :: rest -> if head = name then fresh (name ^"0") rest
@@ -160,8 +160,17 @@ let fresh (name : string) (values : string list) : string =
     [expr] pour remplacer chaque occurrence de la variable nommée [x] par
     l’expression [y]. *)
 let rec substitute (expr : expr) (x : string) (y : expr) : expr =
-  (* À COMPLÉTER! *)
-  expr
+    match expr with
+    |Var(value) -> if value = x then Var(y) else Var(value)
+    |Apply(expr1, expr2) -> Apply((substitute expr1 x y), (substitute expr2 x y ))
+    |Fun(value, expr1) -> 
+            if value = x then Fun(value, expr1)
+            else Fun((fresh value (free_vars expr1)),
+                substitute (substitute expr1 value Var((fresh value (free_vars expr1)))) x y)
+    |Let(value, expr1, expr2) -> 
+            if value = x then Let(value,(substitute expr1 x y), expr2)
+            else Let((fresh value (free_vars expr1),(substitute expr1 x y),
+                (substitute(substitute value Var((fresh value (free_vars expr2)))) x y)
 
 (** [eval expr] évalue l’expression [expr] en la réduisant le plus possible. *)
 let rec eval (expr : expr) : expr =
