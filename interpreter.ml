@@ -151,26 +151,31 @@ let rec free_vars (expr : expr) : string list =
 (** [fresh name values] donne une variation du nom [name] qui n’apparaît pas
     dans la liste [values]. *)
 let rec fresh (name : string) (values : string list) : string =
-    match values with
-    |[] -> name
-    |head :: rest -> if head = name then fresh (name ^"0") rest
-        else fresh name rest
+    let rec in_List str lst = 
+        match lst with 
+         |[] -> false
+         |head :: rest -> if head = str then true else in_List str rest
+    in
+    if in_List name values then
+        fresh (name^"0") values
+    else
+        name
 
 (** [substitute expr x y] applique les règles de substitution dans l’expression
     [expr] pour remplacer chaque occurrence de la variable nommée [x] par
     l’expression [y]. *)
 let rec substitute (expr : expr) (x : string) (y : expr) : expr =
     match expr with
-    |Var(value) -> if value = x then Var(y) else Var(value)
+    |Var(value) -> if value = x then y  else Var(value)
     |Apply(expr1, expr2) -> Apply((substitute expr1 x y), (substitute expr2 x y ))
     |Fun(value, expr1) -> 
             if value = x then Fun(value, expr1)
             else Fun((fresh value (free_vars expr1)),
-                substitute (substitute expr1 value Var((fresh value (free_vars expr1)))) x y)
+                substitute (substitute (expr1) (value) (Var((fresh value (free_vars expr1))))) x y)
     |Let(value, expr1, expr2) -> 
             if value = x then Let(value,(substitute expr1 x y), expr2)
-            else Let((fresh value (free_vars expr1),(substitute expr1 x y),
-                (substitute(substitute value Var((fresh value (free_vars expr2)))) x y)
+            else Let((fresh value (free_vars expr1)),(substitute expr1 x y),
+                (substitute(substitute expr2 value Var(fresh (value) (free_vars expr2))) x y))
 
 (** [eval expr] évalue l’expression [expr] en la réduisant le plus possible. *)
 let rec eval (expr : expr) : expr =
