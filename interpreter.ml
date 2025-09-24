@@ -84,7 +84,7 @@ and parse_fun (input : char list) : (expr * char list) option =
         match parse_ident rest with 
          | Some(value, ' ' :: rest2) -> 
              match parse_expr rest2 with 
-              | Some(expr, rest3) -> Some(Fun(value, expr), rest3)
+              | Some(expr, ')':: rest3) -> Some(Fun(value, expr), rest3)
               |_ -> None
          |_ -> None
     |_ -> None
@@ -95,11 +95,11 @@ and parse_fun (input : char list) : (expr * char list) option =
     est mal formée. *)
 and parse_apply (input : char list) : (expr * char list) option =
    match input with
-   |'a' :: 'p' :: 'p' :: 'l' :: 'y':: '(' :: ' ' :: rest ->
+   |'(' :: rest ->
      match parse_expr rest with
          |Some(expr1, ' ' :: rest2) ->
              match parse_expr rest2 with
-                 |Some (expr2, rest3)-> Some(Apply(expr1, expr2), rest3)
+                 |Some (expr2, ')' :: rest3)-> Some(Apply(expr1, expr2), rest3)
                  |_ -> None
          |_ -> None
     |_ -> None 
@@ -170,14 +170,29 @@ let rec substitute (expr : expr) (x : string) (y : expr) : expr =
     |Apply(expr1, expr2) -> Apply((substitute expr1 x y), (substitute expr2 x y ))
     |Fun(value, expr1) -> 
             if value = x then Fun(value, expr1)
-            else Fun((fresh value (free_vars expr1)),
-                substitute (substitute (expr1) (value) (Var((fresh value (free_vars expr1))))) x y)
+            else
+                let new_value = fresh value (value :: (free_vars expr1)) in
+                Fun(new_value, 
+                    (substitute(substitute expr1 value (Var new_value)) x y ))
     |Let(value, expr1, expr2) -> 
             if value = x then Let(value,(substitute expr1 x y), expr2)
-            else Let((fresh value (free_vars expr1)),(substitute expr1 x y),
-                (substitute(substitute expr2 value Var(fresh (value) (free_vars expr2))) x y))
+            else 
+                let new_value = fresh value (value :: (free_vars expr2)) in
+                Let(new_value, (substitute expr1 x y),
+                    (substitute(substitute expr2 value (Var new_value)) x y))
 
 (** [eval expr] évalue l’expression [expr] en la réduisant le plus possible. *)
 let rec eval (expr : expr) : expr =
-  (* À COMPLÉTER! *)
-  expr
+    match expr with
+    |Var(value) -> Var(value)
+    |Fun(value,expr1) -> Fun(value, eval expr1) 
+    |Apply(expr1,expr2) ->
+           (match expr1  with
+            |Fun(value, expr3) -> eval (substitute expr3 value expr2)
+            |_ -> Apply((eval expr1), (eval expr2))
+           )
+    |Let(value, expr1, expr2) -> 
+            let v1 = eval expr1 in 
+            let v2 = eval expr2 in
+            eval (Apply(Fun(value, v2), v1)) 
+
