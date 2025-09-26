@@ -171,38 +171,6 @@ let rec substitute (expr : expr) (x : string) (y : expr) : expr =
     |Fun(value, expr1) -> 
             if value = x then Fun(value, expr1)
             else
-                let new_value = fresh value (value :: (free_vars expr1)) in
-                Fun(new_value, 
-                    (substitute(substitute expr1 value (Var new_value)) x y ))
-    |Let(value, expr1, expr2) -> 
-            if value = x then Let(value,(substitute expr1 x y), expr2)
-            else 
-                let new_value = fresh value ((free_vars expr2)) in
-                Let(new_value, (substitute expr1 x y),
-                    (substitute(substitute expr2 value (Var new_value)) x y))
-
-(** [eval expr] évalue l’expression [expr] en la réduisant le plus possible. *)
-let rec eval (expr : expr) : expr =
-    match expr with
-    |Var(value) -> Var(value)
-    |Fun(value,expr1) -> 
-            Fun(value, eval expr1) 
-    |Apply(expr1,expr2) ->
-           (match expr1  with
-            |Fun(value, expr3) -> eval (substitute expr3 value expr2)
-            |_ -> Apply((eval expr1), (eval expr2))
-           )
-    |Let(value, expr1, expr2) -> 
-            let v1 = eval expr1 in 
-            let v2 = eval expr2 in
-            eval (Apply(Fun(value, expr2), expr1)) 
-let rec substitute (expr : expr) (x : string) (y : expr) : expr =
-    match expr with
-    |Var(value) -> if value = x then y  else Var(value)
-    |Apply(expr1, expr2) -> Apply((substitute expr1 x y), (substitute expr2 x y ))
-    |Fun(value, expr1) -> 
-            if value = x then Fun(value, expr1)
-            else
                 let new_value = fresh value (value :: (free_vars expr1) @ (free_vars y)) in
                 Fun(new_value, 
                     (substitute(substitute expr1 value (Var new_value)) x y ))
