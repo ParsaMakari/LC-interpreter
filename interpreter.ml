@@ -154,12 +154,13 @@ let rec free_vars (expr : expr) : string list =
             )
 (** [fresh name values] donne une variation du nom [name] qui n’apparaît pas
     dans la liste [values]. *)
+
+let rec in_List (str: string) (lst : string list) : bool = 
+    match lst with 
+     |[] -> false
+     |head :: rest -> if head = str then true else in_List str rest
+ 
 let rec fresh (name : string) (values : string list) : string =
-    let rec in_List (str: string) (lst : string list) : bool = 
-        match lst with 
-         |[] -> false
-         |head :: rest -> if head = str then true else in_List str rest
-    in
     if in_List name values then
         fresh (name^"0") values
     else
@@ -172,12 +173,14 @@ let rec substitute (expr : expr) (x : string) (y : expr) : expr =
     match expr with
     |Var(value) -> if value = x then y  else Var(value)
     |Apply(expr1, expr2) -> Apply((substitute expr1 x y), (substitute expr2 x y ))
-    |Fun(value, expr1) -> 
-            if value = x then Fun(value, expr1)
-            else
-                let new_value = fresh value (value :: (free_vars expr1) @ (free_vars y)) in
-                Fun(new_value, 
-                    (substitute(substitute expr1 value (Var new_value)) x y ))
+    |Fun(value, expr1) ->
+        if value = x then Fun(value, expr1)
+        else if in_List value (free_vars y) then
+            let new_value = fresh value ((free_vars expr1) @ (free_vars y)) in
+            Fun(new_value,
+                substitute (substitute expr1 value (Var new_value)) x y)
+        else
+            Fun(value, substitute expr1 x y)
     |Let(value, expr1, expr2) -> 
             if value = x then Let(value,(substitute expr1 x y), expr2)
             else 
