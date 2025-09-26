@@ -147,11 +147,15 @@ let rec free_vars (expr : expr) : string list =
     |Var(str) -> [str]
     |Let(name,expr1,expr2) -> (free_vars expr1) @ (remove (free_vars expr2) name) 
     |Fun(str, expr1) -> remove (free_vars expr1) (str)
-    |Apply(expr1, expr2) -> (free_vars expr1) @ (free_vars expr2)
+    |Apply(expr1, expr2) -> 
+            (match expr1 with
+            |Fun(str,expr3) -> free_vars (Let(str, expr2, expr3))
+            |_ -> (free_vars expr1) @ (free_vars expr2)
+            )
 (** [fresh name values] donne une variation du nom [name] qui n’apparaît pas
     dans la liste [values]. *)
 let rec fresh (name : string) (values : string list) : string =
-    let rec in_List str lst = 
+    let rec in_List (str: string) (lst : string list) : bool = 
         match lst with 
          |[] -> false
          |head :: rest -> if head = str then true else in_List str rest
