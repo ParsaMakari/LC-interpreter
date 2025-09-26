@@ -66,7 +66,7 @@ and parse_let (input : char list) : (expr * char list) option =
                         match parse_expr rest3 with  
                      |Some(expr1, ')' :: ' ' :: rest4) ->
                              match parse_expr rest4 with  
-                        |Some(expr2, rest5) -> Some(Let(name, expr1, expr2), rest5)
+                        |Some(expr2, ')' :: rest5) -> Some(Let(name, expr1, expr2), rest5)
                         |_ -> None
                      |_ -> None
                 |_ ->None
