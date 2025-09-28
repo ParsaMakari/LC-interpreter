@@ -59,18 +59,18 @@ let rec parse_expr (input : char list) : (expr * char list) option =
 and parse_let (input : char list) : (expr * char list) option =
     match input with 
      | '(' :: 'l' :: 'e' :: 't' :: ' ' :: rest -> 
-             match rest with 
+             (match rest with 
              | '(' :: rest2 -> 
-                     match parse_ident rest2 with 
+                     (match parse_ident rest2 with 
                 | Some(name, ' ' ::rest3) -> 
-                        match parse_expr rest3 with  
+                        (match parse_expr rest3 with  
                      |Some(expr1, ')' :: ' ' :: rest4) ->
-                             match parse_expr rest4 with  
+                             (match parse_expr rest4 with  
                         |Some(expr2, ')' :: rest5) -> Some(Let(name, expr1, expr2), rest5)
-                        |_ -> None
-                     |_ -> None
-                |_ ->None
-             | _ -> None
+                        |_ -> None)
+                     |_ -> None)
+                |_ ->None)
+             | _ -> None)
     | _ -> None
 
 
@@ -81,12 +81,12 @@ and parse_let (input : char list) : (expr * char list) option =
 and parse_fun (input : char list) : (expr * char list) option =
     match input with 
      |'(' :: 'f' :: 'u' :: 'n' :: ' ' :: rest ->
-        match parse_ident rest with 
+        (match parse_ident rest with 
          | Some(value, ' ' :: rest2) -> 
-             match parse_expr rest2 with 
+             (match parse_expr rest2 with 
               | Some(expr, ')':: rest3) -> Some(Fun(value, expr), rest3)
-              |_ -> None
-         |_ -> None
+              |_ -> None)
+         |_ -> None)
     |_ -> None
         
 (** [parse_apply input] analyse l’entrée [input] pour y trouver un préfixe
@@ -96,12 +96,12 @@ and parse_fun (input : char list) : (expr * char list) option =
 and parse_apply (input : char list) : (expr * char list) option =
    match input with
    |'(' :: rest ->
-     match parse_expr rest with
+     (match parse_expr rest with
          |Some(expr1, ' ' :: rest2) ->
-             match parse_expr rest2 with
+             (match parse_expr rest2 with
                  |Some (expr2, ')' :: rest3)-> Some(Apply(expr1, expr2), rest3)
-                 |_ -> None
-         |_ -> None
+                 |_ -> None)
+         |_ -> None)
     |_ -> None 
  
 (** [parse_var input] analyse l’entrée [input] pour y trouver un préfixe
