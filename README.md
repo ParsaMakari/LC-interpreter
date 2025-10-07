@@ -6,6 +6,7 @@
 
 Alonzo’s syntax is simple and purely functional:
 
+```bash
 <expr>  ::= <let> | <fun> | <apply> | <var>  
 <let>   ::= "(let (" <ident> " " <expr> ") " <expr> ")"  
 <fun>   ::= "(fun " <ident> " " <expr> ")"  
@@ -13,6 +14,7 @@ Alonzo’s syntax is simple and purely functional:
 <var>   ::= <ident>  
 <ident> ::= <letter> <ident> | <letter>  
 <letter>::= "a" | ... | "z" | "A" | ... | "Z" | "0" | ... | "9" | "-"
+```
 
 ### Examples
 
